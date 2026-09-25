@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANVIL // Store for Tools Forged Locally</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Space+Grotesk:wght@400;700&display=swap');
+
+        :root {
+            --bg: #0c0d0e;
+            --surface: #141517;
+            --surface-hover: #1c1d20;
+            --border: #282a2e;
+            --text-primary: #ededed;
+            --text-secondary: #8e9093;
+            --accent: #00ff66; /* Terminal Green */
+            --accent-green: #00ff66; /* Terminal Green */
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-sans: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            padding: 2rem;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .brand-title {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+        }
+
+        .brand-title span {
+            color: var(--accent);
+        }
+
+        .system-status {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-green);
+            background: rgba(0, 255, 102, 0.05);
+            border: 1px solid var(--accent-green);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .hero-banner {
+            border: 2px solid var(--border);
+            background-color: var(--surface);
+            padding: 3rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hero-tag {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0.75rem 1.15rem;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: var(--bg);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+        }
+
+        .button:hover, .button:focus-visible {
+            transform: translateY(-2px);
+            background: var(--text-primary);
+            border-color: var(--text-primary);
+            color: var(--bg);
+        }
+
+        .button.secondary {
+            background: transparent;
+            color: var(--accent);
+        }
+
+        .button.secondary:hover, .button.secondary:focus-visible {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .countdown-wrap {
+            margin-top: 2rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.25rem;
+        }
+
+        .countdown-label {
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+
+        .countdown {
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: clamp(1.7rem, 5vw, 3.5rem);
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 2rem;
+            margin-bottom: 5rem;
+        }
+
+        .store-card {
+            border: 2px solid var(--border);
+            background: var(--surface);
+            min-height: 430px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-visual {
+            min-height: 180px;
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            place-items: center;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: clamp(3rem, 8vw, 6rem);
+            letter-spacing: -0.05em;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 102, 0.12), transparent 58%), var(--bg);
+        }
+
+        .store-card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .store-card h2 {
+            font-size: clamp(1.65rem, 3vw, 2.3rem);
+            margin-bottom: 0.7rem;
+        }
+
+        .store-card p {
+            color: var(--text-secondary);
+            max-width: 58ch;
+            margin-bottom: 1.5rem;
+        }
+
+        .store-card .button {
+            margin-top: auto;
+            align-self: flex-start;
+        }
+
+        .contact-section {
+            border-top: 2px solid var(--border);
+            padding: 3rem 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+            align-items: flex-end;
+        }
+
+        .contact-section h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            margin-bottom: 0.75rem;
+        }
+
+        .contact-section p {
+            color: var(--text-secondary);
+            max-width: 52ch;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            font-family: var(--font-mono);
+            white-space: nowrap;
+        }
+
+        .contact-links a {
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 0.2em;
+        }
+
+        .contact-links a:hover, .contact-links a:focus-visible {
+            color: var(--text-primary);
+        }
+
+        dialog {
+            width: min(560px, calc(100% - 2rem));
+            border: 2px solid var(--accent);
+            background: var(--surface);
+            color: var(--text-primary);
+            padding: 0;
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.78);
+        }
+
+        .modal-content {
+            padding: 1.5rem;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-content > p {
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+
+        .interest-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .interest-form label {
+            display: grid;
+            gap: 0.35rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .interest-form input {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-primary);
+            font: inherit;
+            padding: 0.75rem;
+        }
+
+        .interest-form input:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .card {
+            border: 2px solid var(--border);
+            background-color: var(--surface);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 480px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-num {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+        }
+
+        .card-status {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .status-ready {
+            color: var(--accent-green);
+            border-color: rgba(0, 255, 102, 0.2);
+            background-color: rgba(0, 255, 102, 0.03);
+        }
+
+        .status-progress {
+            color: #00ff66;
+            border-color: rgba(255, 204, 0, 0.2);
+            background-color: rgba(255, 204, 0, 0.03);
+        }
+
+        .status-planning {
+            color: var(--text-secondary);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-spec-box {
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: auto;
+        }
+
+        .tech-spec-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .tech-spec-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .tech-spec-label {
+            color: var(--text-primary);
+        }
+
+        .card-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .card:hover .card-footer {
+            color: var(--accent);
+        }
+
+        .card-arrow {
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover .card-arrow {
+            transform: translateX(5px);
+        }
+
+        footer {
+            border-top: 2px solid var(--border);
+            padding-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .footer-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            margin-left: 1.5rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .hero-title {
+                font-size: 2.25rem;
+            }
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .store-grid {
+                grid-template-columns: 1fr;
+            }
+            .contact-section {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .contact-links {
+                white-space: normal;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-title">ANVIL<span>.</span>GEEK</div>
+    </header>
+
+    <main>
+        <section class="hero-banner" aria-labelledby="entelechy-title">
+            <div>
+                <div class="hero-tag">[ FIRST RELEASE // ANVIL STORE ]</div>
+                <h1 id="entelechy-title" class="hero-title">Entelechy: local intelligence, forged into a physical key.</h1>
+                <p class="hero-description">A portable, offline-first AI workspace for people who want useful intelligence close at hand. Entelechy is being prepared as the first product released by Anvil.</p>
+                <div class="hero-actions">
+                    <button class="button" type="button" data-interest="Entelechy pre-order registration">Register for pre-order</button>
+                    <a class="button secondary" href="#catalog">Explore the forge</a>
+                </div>
+                <div class="countdown-wrap" aria-live="polite">
+                    <div class="countdown-label">Entelechy launches 21 October 2026 · 7:00 PM IST · Pre-orders are open</div>
+                    <div id="countdown" class="countdown">--d --h --m --s</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="catalog" aria-labelledby="catalog-title">
+            <div class="hero-tag">[ OTHER TOOLS // INTEREST REGISTER ]</div>
+            <h2 id="catalog-title" class="hero-title" style="font-size: clamp(2rem, 5vw, 3.5rem);">Next from the forge.</h2>
+            <div class="store-grid">
+                <article class="store-card">
+                    <div class="product-visual" aria-hidden="true">*</div>
+                    <div class="store-card-content">
+                        <div class="card-status status-progress">IN FABRICATION</div>
+                        <h2>*</h2>
+                        <p>A compact ESP32-based hardware multi-tool for exploring radio, NFC, and physical interfaces. The current prototype brings together a CC1101, nRF24L01, PN532, OLED, and rotary control.</p>
+                        <button class="button secondary" type="button" data-interest="* show interest">Show interest</button>
+                    </div>
+                </article>
+                <article class="store-card">
+                    <div class="product-visual" aria-hidden="true">*</div>
+                    <div class="store-card-content">
+                        <div class="card-status status-planning">IN PLANNING</div>
+                        <h2>*</h2>
+                        <p>A tactile command surface for focused work: an ortholinear macro layout, mechanical switches, and rotary controls designed to make digital actions feel physical.</p>
+                        <button class="button secondary" type="button" data-interest="* show interest">Show interest</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="contact-section" aria-labelledby="contact-title">
+            <div>
+                <div class="hero-tag">[ OPEN CHANNELS ]</div>
+                <h2 id="contact-title">Enter the forge.</h2>
+                <p>For pre-orders, product interest, build questions, and launch updates, use either direct email or the Anvil Discord community.</p>
+            </div>
+            <div class="contact-links">
+                <a href="mailto:anvil.geek@gmail.com">anvil.geek@gmail.com</a>
+                <a href="https://discord.gg/Zv6wASRSq" target="_blank" rel="noopener noreferrer">Join the Anvil Discord ↗</a>
+                <a href="https://www.instagram.com/anvil.geek/" target="_blank" rel="noopener noreferrer">Instagram @Anvil.Geek ↗</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div>© 2026 ANVIL.GEEK</div>
+    </footer>
+
+    <dialog id="interest-dialog" aria-labelledby="interest-title">
+        <div class="modal-content">
+            <h2 id="interest-title">Register your interest</h2>
+            <p id="interest-description">No payment is required. We will use these details only to follow up about the launch.</p>
+            <form class="interest-form" id="interest-form" method="dialog">
+                <input type="hidden" id="interest-product" name="product">
+                <label>Name
+                    <input required name="name" autocomplete="name" placeholder="Your name">
+                </label>
+                <label>Email
+                    <input required type="email" name="email" autocomplete="email" placeholder="you@example.com">
+                </label>
+                <label>Phone number with country code
+                    <input required type="tel" name="phone" autocomplete="tel" placeholder="+91 98765 43210">
+                </label>
+                <label>Instagram address
+                    <input required name="instagram" autocomplete="off" placeholder="@yourhandle or profile URL">
+                </label>
+                <div class="modal-actions">
+                    <button class="button secondary" type="button" id="close-dialog">Cancel</button>
+                    <button class="button" type="submit">Submit interest</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <script>
+        // Countdown target is explicitly India Standard Time (UTC+05:30).
+        const launchTarget = new Date('2026-10-21T19:00:00+05:30').getTime();
+        const countdown = document.getElementById('countdown');
+
+        function updateCountdown() {
+            const remaining = launchTarget - Date.now();
+            if (remaining <= 0) {
+                countdown.textContent = 'LAUNCH LIVE';
+                return;
+            }
+            const totalSeconds = Math.floor(remaining / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            countdown.textContent = `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        const SUBMISSION_ENDPOINT = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+                const dialog = document.getElementById('interest-dialog');
+                const form = document.getElementById('interest-form');
+        const productField = document.getElementById('interest-product');
+
+        document.querySelectorAll('[data-interest]').forEach((button) => {
+            button.addEventListener('click', () => {
+                productField.value = button.dataset.interest;
+                dialog.showModal();
+                dialog.querySelector('input[name="name"]').focus();
+            });
+        });
+
+        document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const data = new FormData(form);
+            const submission = {
+                product: data.get('product'),
+                name: data.get('name'),
+                email: data.get('email'),
+                phone: data.get('phone'),
+                instagram: data.get('instagram'),
+                source: 'website'
+            };
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'SAVING...';
+
+            try {
+                if (SUBMISSION_ENDPOINT.includes('PASTE_YOUR_')) {
+                    throw new Error('Submission endpoint is not configured yet.');
+                }
+                const response = await fetch(SUBMISSION_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(submission)
+                });
+                const result = await response.json();
+                if (!response.ok || !result.ok) throw new Error(result.error || 'Submission failed.');
+                dialog.close();
+                form.reset();
+                alert('Thanks — your interest has been saved.');
+            } catch (error) {
+                alert('The form could not be saved yet. Please try again shortly or email anvil.geek@gmail.com.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit interest';
+            }
+        });
+
+        document.querySelector('a[href="#catalog"]').addEventListener('click', (event) => {
+            event.preventDefault();
+            document.getElementById('catalog').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    </script>
+</body>
+</html>
